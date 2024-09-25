@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"os"
 	"context"
 	"io"
 	"net"
@@ -69,6 +70,10 @@ func discover(
 	location = result.GetSelfLocation()
 	endpoints = make([]endpoint.Endpoint, 0, len(result.GetEndpoints()))
 	for _, e := range result.GetEndpoints() {
+                os.Stderr.WriteString("endpoint res: " + e.GetAddress() + " " + strconv.Itoa(int(e.GetPort())) + "\n")
+		if len(e.GetIpV4()) != 0 {
+                    os.Stderr.WriteString("endpoints v4: " + e.GetIpV4()[0] + "\n")
+		}
 		if e.GetSsl() == config.Secure() {
 			endpoints = append(endpoints, endpoint.New(
 				net.JoinHostPort(
@@ -81,6 +86,9 @@ func discover(
 				endpoint.WithLocalDC(e.GetLocation() == location),
 				endpoint.WithServices(e.GetService()),
 				endpoint.WithLastUpdated(config.Clock().Now()),
+				endpoint.WithIpV4(e.GetIpV4()),
+				endpoint.WithIpV6(e.GetIpV6()),
+				endpoint.WithSslTargetNameOverride(e.GetSslTargetNameOverride()),
 			))
 		}
 	}
